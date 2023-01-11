@@ -13,6 +13,10 @@ const db = mysql.createConnection({
   database: "test"
 });
 
+// >> Usar middlewares;
+app.use(express.json())
+app.use(cors());
+
 /*
 >> Usado para fazer requisições usando o método "GET"
   app.get(path, callback);
@@ -20,11 +24,11 @@ const db = mysql.createConnection({
     ¬ para cada request 
     -> callback - a função de retorno para quando for feita a requisição
 */
-app.get("/", (req, res) => {
+app.get("/", ( req, res ) => {
   res.json("HELLLLOOOOOO HELLFIRE");
 });
 
-app.get("/books", (req, res) => {
+app.get("/api/books", ( req, res ) => {
   const q = "SELECT * FROM books";
   /*
   >> Com esse método é feito asquerys no banco
@@ -34,39 +38,72 @@ app.get("/books", (req, res) => {
         +> err - seria o erro, se acontecer um 
         +> data - dados vindos da query
   */
-  db.query(q, (err, data) => {
+  db.query(q, ( err, data ) => {
     if (err) return res.json(err); 
     
     return res.json(data);
   });
 });
 
-app.post("/books", (req, res) => {
-  const { title, description, cover } = req.body;
-
-  const q = "INSERT INTO books (`title, `description`, `cover`) VALUES (?)";
+app.post("/api/addBook", ( req, res ) => {
   const values = [
-    title,
-    description, 
-    cover,
+    req.body.title,
+    req.body.description, 
+    req.body.price,
+    req.body.cover,
   ];
 
-  db.query(q, [values], (err, data) => {
+  const q = "INSERT INTO books (`title, `description`, `price`, `cover`) VALUES (?, ?, ?, ?)";
+
+  db.query(q, values, ( err, data ) => {
     if (err) return res.json(err);
     return res.json("Book criado com sucesso!");
   });
 });
 
-// >> Usar middlewares;
-app.use(express.json())
-app.use(cors(
-  {
-    origin:'http://127.0.0.1:5173/', 
-    accessControlAllowCredentials:true,
-    credentials:true,            
-    optionSuccessStatus:200
-  }
-));
+app.delete("/api/deleteBook/:id", ( req, res ) => {
+  const bookID = req.params.id;
+
+  const q = `
+  DELETE FROM 
+    books
+  WHERE
+    book_id = ?
+  `;
+
+  db.query(q, [ bookID ], ( err, data ) => {
+    if (err) return res.json(err);
+    return res.json("'Book' deletado com sucesso!");
+  });
+});
+
+app.put("/api/updateBook/:id", ( req, res ) => {
+  const bookID = req.params.id;
+  const values = [
+    req.body.title,
+    req.body.description, 
+    req.body.price,
+    req.body.cover,
+  ];
+
+  const q = `
+  Update
+    books
+  SELECT
+    title = ?,
+    description = ?,
+    price = ?,
+    cover = ?
+  WHERE
+    book_id = ?
+  `;
+
+  db.query(q, [ ...values, bookID ], ( err, data ) => {
+    if (err) return res.json(err);
+    return res.json("'Book' atualizado com sucesso!");
+  });
+});
+
 
 /*
 >> Fornecer a porta da aplicação e passar um callback 

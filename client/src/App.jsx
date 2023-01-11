@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import './styles/styles.css';
 import "./App.css";
 
 import { Books } from "./pages/Books";
@@ -20,7 +21,7 @@ function App() {
         />
 
         <Route 
-          path="/update" 
+          path="/update/:id" 
           element={<Update />} 
         />
       </Routes>
